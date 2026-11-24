@@ -23,6 +23,78 @@ jobs:
           distribution: temurin
           java-version: "21"
 
+      # استبدال محرر Monaco (لا يدعم الهواتف) بمحرر نص عادي يدعم النسخ واللصق
+      - name: Replace editor with textarea
+        working-directory: app
+        run: |
+          cat > src/editor/editorCustom.tsx <<'EOF_EDITOR'
+          import React, { useEffect, useState } from "react";
+
+          type EditorCustomType = {
+            value?: string;
+            language?: string;
+            modelChangedContent?: unknown;
+            valueChanged?: (value: string | undefined) => void;
+            theme?: "light" | "dark";
+            line?: number;
+            width?: string;
+            height?: string;
+            options?: object;
+          };
+
+          const EditorCustom = ({
+            value,
+            valueChanged,
+            theme,
+            width,
+            height,
+          }: EditorCustomType) => {
+            const [text, setText] = useState<string>(value ?? "");
+
+            useEffect(() => {
+              if (value !== undefined && value !== text) {
+                setText(value);
+              }
+              // eslint-disable-next-line react-hooks/exhaustive-deps
+            }, [value]);
+
+            const dark = theme === "dark";
+
+            return (
+              <textarea
+                value={text}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  if (valueChanged) valueChanged(e.target.value);
+                }}
+                spellCheck={false}
+                autoCapitalize="off"
+                autoCorrect="off"
+                autoComplete="off"
+                wrap="off"
+                style={{
+                  display: "block",
+                  width: width ?? "100%",
+                  height: height ?? "30vh",
+                  boxSizing: "border-box",
+                  padding: "8px",
+                  fontFamily: "monospace",
+                  fontSize: "14px",
+                  whiteSpace: "pre",
+                  overflow: "auto",
+                  resize: "none",
+                  border: "1px solid #888",
+                  borderRadius: "4px",
+                  background: dark ? "#1e1e1e" : "#ffffff",
+                  color: dark ? "#d4d4d4" : "#000000",
+                }}
+              />
+            );
+          };
+
+          export default React.memo(EditorCustom);
+          EOF_EDITOR
+
       - name: Install and build web
         working-directory: app
         run: |
