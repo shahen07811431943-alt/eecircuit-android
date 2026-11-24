@@ -111,7 +111,17 @@ jobs:
 
       - name: Build debug APK
         working-directory: app/android
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          # زيادة مهلة تحميل Gradle واستخدام النسخة الأصغر
+          sed -i 's/^networkTimeout=.*/networkTimeout=180000/' gradle/wrapper/gradle-wrapper.properties
+          sed -i 's/-all\.zip/-bin.zip/' gradle/wrapper/gradle-wrapper.properties
+          cat gradle/wrapper/gradle-wrapper.properties
+          for i in 1 2 3; do
+            ./gradlew assembleDebug --no-daemon && exit 0
+            echo "Attempt $i failed, retrying..."
+            sleep 15
+          done
+          exit 1
 
       - uses: actions/upload-artifact@v4
         with:
